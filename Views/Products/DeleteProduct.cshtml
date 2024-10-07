@@ -1,0 +1,20 @@
+﻿@model SalesOrders.Models.Product
+
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+<div class="container">
+    <h2 class="text-center mb-5">Delete Product</h2>
+    <div class="alert alert-warning">
+        <strong>Warning!</strong> Are you sure you want to delete the product "<strong>@Model.Name</strong>"?
+    </div>
+
+    <form asp-action="DeleteProduct" method="post">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <div>
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

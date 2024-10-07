@@ -1,0 +1,71 @@
+﻿@model SalesOrders.Models.ProductDto
+
+@{
+}
+
+<div class="container">
+    <h2 class="text-center mb-5">Create</h2>
+
+    <form asp-action="Create" method="post" class="needs-validation" novalidate>
+        <div class="form-group mb-3">
+            <label asp-for="Name" class="form-label">Name</label>
+            <input asp-for="Name" class="form-control" placeholder="Enter product name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" placeholder="Enter product description"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="ProductCode" class="form-label">Product Code</label>
+            <input asp-for="ProductCode" class="form-control" placeholder="Enter product code" />
+            <span asp-validation-for="ProductCode" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="ProductType" class="form-label">Product Type</label>
+            <select asp-for="ProductType" class="form-control">
+                <option value="">Select Type</option>
+                <option value="Apparel">Apparel</option>
+                <option value="Parts">Parts</option>
+                <option value="Equipment">Equipment</option>
+                <option value="Motor">Motor</option>
+            </select>
+            <span asp-validation-for="ProductType" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="CostPrice" class="form-label">Cost Price</label>
+            <input asp-for="CostPrice" type="number" class="form-control" placeholder="Enter cost price" />
+            <span asp-validation-for="CostPrice" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="SalesPrice" class="form-label">Sales Price</label>
+            <input asp-for="SalesPrice" type="number" class="form-control" placeholder="Enter sales price" />
+            <span asp-validation-for="SalesPrice" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="StaffDiscountedPrice" class="form-label">Staff Discounted Price</label>
+            <input asp-for="StaffDiscountedPrice" type="number" class="form-control" placeholder="Enter staff discounted price" />
+            <span asp-validation-for="StaffDiscountedPrice" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="StockQuantity" class="form-label">Stock Quantity</label>
+            <input asp-for="StockQuantity" type="number" class="form-control" placeholder="Enter stock quantity" />
+            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Product</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
