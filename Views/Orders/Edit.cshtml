@@ -1,0 +1,104 @@
+﻿@model SalesOrders.Models.OrdersDto
+
+@{
+    ViewData["Title"] = "Edit Order";
+}
+
+<h1>Edit Order</h1>
+
+<form asp-action="Edit" method="post">
+    <input asp-for="Id" hidden />
+
+    <div class="form-group">
+        <label asp-for="CustomerName" class="control-label"></label>
+        <input asp-for="CustomerName" class="form-control" />
+        <span asp-validation-for="CustomerName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="OrderDate" class="control-label"></label>
+        <input asp-for="OrderDate" class="form-control" type="date" />
+        <span asp-validation-for="OrderDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Status" class="control-label">Order Status</label>
+        <select asp-for="Status" class="form-control">
+            Pending
+            Shipped
+            Completed
+            Cancelled
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <h3>Order Products</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="product-list">
+            @for (int i = 0; i < Model.OrderProducts.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <input asp-for="@Model.OrderProducts[i].ProductId" class="form-control" hidden />
+                        <select asp-for="@Model.OrderProducts[i].ProductId" class="form-control">
+                            <option value="">Select Product</option>
+                            <!-- Populate with real product data -->
+                            Product A
+                            Product B
+                        </select>
+                    </td>
+                    <td>
+                        <input asp-for="@Model.OrderProducts[i].Quantity" class="form-control" />
+                    </td>
+                    <td>
+                        <input asp-for="@Model.OrderProducts[i].UnitPrice" class="form-control" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" onclick="removeProductRow(this)">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary" onclick="addProductRow()">Add Product</button>
+
+    <div class="form-group mt-4">
+        <input type="submit" value="Save" class="btn btn-primary" />
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function addProductRow() {
+            const row = `
+                <tr>
+                    <td>
+                        <input type="hidden" name="OrderProducts.Index" value="-1" />
+                        <select name="OrderProducts[-1].ProductId" class="form-control">
+                            <option value="">Select Product</option>
+                            <option value="1">Product A</option>
+                            <option value="2">Product B</option>
+                        </select>
+                    </td>
+                    <td><input name="OrderProducts[-1].Quantity" class="form-control" /></td>
+                    <td><input name="OrderProducts[-1].UnitPrice" class="form-control" /></td>
+                    <td><button type="button" class="btn btn-danger" onclick="removeProductRow(this)">Remove</button></td>
+                </tr>`;
+            document.getElementById('product-list').insertAdjacentHTML('beforeend', row);
+        }
+
+        function removeProductRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+    </script>
+}

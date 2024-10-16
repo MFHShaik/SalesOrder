@@ -1,0 +1,31 @@
+﻿@model SalesOrders.Models.OrdersDto
+
+<h1>Order Details</h1>
+
+<div>
+    <h3>Order ID: @Model.Id</h3>
+    <p>Customer Name: @Model.CustomerName</p>
+    <p>Order Date: @Model.OrderDate.ToShortDateString()</p>
+    <p>Total Amount: @Model.TotalAmount.ToString("C")</p>
+</div>
+
+<h2>Order Products</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Product ID</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model.OrderProducts)
+        {
+            <tr>
+                <td>@product.ProductId</td>
+                <td>@product.Quantity</td>
+                <td>@product.UnitPrice.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>

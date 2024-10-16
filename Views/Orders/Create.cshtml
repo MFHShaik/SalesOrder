@@ -1,0 +1,169 @@
+﻿@model SalesOrders.Models.OrdersDto
+
+<h2>Create Order</h2>
+
+<div class="form-group">
+    <label for="OrderId">Order ID:</label>
+    <input type="text" id="OrderId" class="form-control" value="@Model.Id" readonly />
+</div>
+
+<form asp-action="Create" method="post" id="CreateOrderForm">
+    <div class="form-group">
+        <label asp-for="CustomerName"></label>
+        <input asp-for="CustomerName" class="form-control" required />
+        <span asp-validation-for="CustomerName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="OrderDate"></label>
+        <input asp-for="OrderDate" class="form-control" type="date" required />
+        <span asp-validation-for="OrderDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control" required>
+            <option value="">Select Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Processing">Processing</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="ProductSelection">Select Product</label>
+        <select id="ProductSelection" class="form-control">
+            @if (ViewBag.Products != null && ((IEnumerable<ProductDto>)ViewBag.Products).Any())
+            {
+                foreach (var product in ViewBag.Products)
+                {
+                    <option value="@product.Id" data-price="@product.SalesPrice">
+                        @product.Name (@product.StockQuantity available)
+                    </option>
+                }
+            }
+            else
+            {
+                <option value="">No products available</option>
+            }
+        </select>
+        <label for="ProductQuantity">Quantity</label>
+        <input type="number" id="ProductQuantity" class="form-control" min="1" />
+        <button type="button" id="AddProductButton" class="btn btn-secondary">Add Product</button>
+    </div>
+
+    <!-- Table to show added products -->
+    <table class="table" id="ProductTable">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <label for="TotalAmount">Total Amount</label>
+        <input asp-for="TotalAmount" id="TotalAmount" class="form-control" type="text" readonly />
+        <span asp-validation-for="TotalAmount" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <button type="button" id="CancelOrderButton" class="btn btn-danger">Cancel Order</button>
+
+    <!-- Hidden container for order products -->
+    <div id="OrderProductsContainer" style="display:none;"></div>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let totalAmount = 0;
+
+            document.getElementById('AddProductButton').addEventListener('click', function () {
+                var productSelect = document.getElementById('ProductSelection');
+                var selectedOption = productSelect.options[productSelect.selectedIndex];
+                var productId = selectedOption.value;
+                var productName = selectedOption.text.split('(')[0].trim();
+                var unitPrice = parseFloat(selectedOption.getAttribute('data-price'));
+                var quantity = parseInt(document.getElementById('ProductQuantity').value);
+
+                // Validate product and quantity
+                if (!productId || quantity <= 0) {
+                    alert("Please select a product and enter a valid quantity.");
+                    return;
+                }
+
+                // Calculate total price for the product
+                var totalPrice = (unitPrice * quantity).toFixed(2);
+
+                // Create table row for the product
+                var table = document.getElementById('ProductTable').getElementsByTagName('tbody')[0];
+                var newRow = table.insertRow();
+                var cell1 = newRow.insertCell(0);
+                var cell2 = newRow.insertCell(1);
+                var cell3 = newRow.insertCell(2);
+                var cell4 = newRow.insertCell(3);
+                var cell5 = newRow.insertCell(4);
+
+                cell1.innerHTML = productName;
+                cell2.innerHTML = unitPrice.toFixed(2);
+                cell3.innerHTML = quantity;
+                cell4.innerHTML = totalPrice;
+
+                // Add Remove button
+                cell5.innerHTML = `<button type="button" class="btn btn-danger remove-product">Remove</button>`;
+
+                // Add hidden inputs for order products
+                var container = document.getElementById('OrderProductsContainer');
+                var productIndex = table.rows.length - 1;
+
+                container.insertAdjacentHTML('beforeend', `<input type="hidden" name="OrderProducts[${productIndex}].ProductId" value="${productId}" />`);
+                container.insertAdjacentHTML('beforeend', `<input type="hidden" name="OrderProducts[${productIndex}].Quantity" value="${quantity}" />`);
+                container.insertAdjacentHTML('beforeend', `<input type="hidden" name="OrderProducts[${productIndex}].UnitPrice" value="${unitPrice}" />`);
+
+                // Update total amount
+                totalAmount += parseFloat(totalPrice);
+                document.getElementById('TotalAmount').value = Math.floor(totalAmount); // Remove everything after the decimal point
+
+                // Clear the quantity input
+                document.getElementById('ProductQuantity').value = '';
+
+                // Optionally, show a notification
+                // showNotification(`${productName} added to order.`);
+            });
+
+            // Remove product from the table and update total amount
+            document.getElementById('ProductTable').addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('remove-product')) {
+                    var row = e.target.closest('tr');
+                    var totalPrice = parseFloat(row.cells[3].innerHTML);
+
+                    // Update total amount
+                    totalAmount -= totalPrice;
+                    document.getElementById('TotalAmount').value = Math.floor(totalAmount); // Remove everything after the decimal point
+
+                    // Remove the row
+                    row.remove();
+                }
+            });
+
+            document.getElementById('CancelOrderButton').addEventListener('click', function () {
+                // Logic to handle cancellation (e.g., clearing the form)
+                document.getElementById('CreateOrderForm').reset();
+                totalAmount = 0; // Reset the total amount
+                document.getElementById('TotalAmount').value = '0'; // Reset to zero
+                document.getElementById('ProductTable').getElementsByTagName('tbody')[0].innerHTML = '';
+                document.getElementById('OrderProductsContainer').innerHTML = ''; // Clear hidden inputs
+            });
+        });
+    </script>
+}

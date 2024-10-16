@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SalesOrders.Models
 {
-    public class Order
+    public class OrdersDto
     {
         public int Id { get; set; }
 
@@ -13,19 +13,16 @@ namespace SalesOrders.Models
         public string CustomerName { get; set; }
 
         [Required(ErrorMessage = "Order date is required.")]
-        public DateTime OrderDate { get; set; }
+        public DateTime OrderDate { get; set; } = DateTime.Now; // Default to current date
 
         [Required(ErrorMessage = "Total amount is required.")]
-        [Range(0, double.MaxValue, ErrorMessage = "Total amount must be a positive value.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Total amount must be a positive value.")]
         public decimal TotalAmount { get; set; }
 
         [Required(ErrorMessage = "Order status is required.")]
-        public string Status { get; set; } // New status field
-        public List<OrderProduct> OrderProducts { get; set; }
+        public string Status { get; set; }
 
-        public Order()
-        {
-            OrderProducts = new List<OrderProduct>();
-        }
+        // Initialize the OrderProducts list to avoid null reference exceptions
+        public List<OrderProductDto> OrderProducts { get; set; } = new List<OrderProductDto>();
     }
-}
+}   

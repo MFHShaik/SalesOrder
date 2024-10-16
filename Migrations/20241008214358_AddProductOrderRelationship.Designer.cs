@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SalesOrders.Services;
 
@@ -11,9 +12,10 @@ using SalesOrders.Services;
 namespace SalesOrders.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241008214358_AddProductOrderRelationship")]
+    partial class AddProductOrderRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +24,7 @@ namespace SalesOrders.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("SalesOrders.Models.Order", b =>
+            modelBuilder.Entity("Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -38,10 +40,6 @@ namespace SalesOrders.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -50,12 +48,15 @@ namespace SalesOrders.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("SalesOrders.Models.OrderProduct", b =>
+            modelBuilder.Entity("OrderProduct", b =>
                 {
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
                     b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -122,9 +123,9 @@ namespace SalesOrders.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("SalesOrders.Models.OrderProduct", b =>
+            modelBuilder.Entity("OrderProduct", b =>
                 {
-                    b.HasOne("SalesOrders.Models.Order", "Order")
+                    b.HasOne("Order", "Order")
                         .WithMany("OrderProducts")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -141,7 +142,7 @@ namespace SalesOrders.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("SalesOrders.Models.Order", b =>
+            modelBuilder.Entity("Order", b =>
                 {
                     b.Navigation("OrderProducts");
                 });
