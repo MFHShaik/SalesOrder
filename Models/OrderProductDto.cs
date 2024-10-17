@@ -6,6 +6,9 @@ namespace SalesOrders.Models
 {
     public class OrderProductDto
     {
+        [Required]
+        public int OrderId { get; set; }
+
         [Required(ErrorMessage = "Product ID is required.")]
         public int ProductId { get; set; }
         public string ProductName { get; set; }

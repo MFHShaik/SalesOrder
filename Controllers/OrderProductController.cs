@@ -15,6 +15,21 @@ namespace SalesOrders.Controllers
             this.context = context;
         }
 
+        public IActionResult Index()
+        {
+            var orderProducts = context.OrderProducts
+                .Select(op => new OrderProductDto // Change from OrdersDto to OrderProductDto
+                {
+                    OrderId = op.OrderId,
+                    ProductId = op.ProductId,
+                    Quantity = op.Quantity,
+                    UnitPrice = op.UnitPrice
+                })
+                .ToList();
+
+            return View(orderProducts);
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddProductToOrder(int orderId, int productId, int quantity)
         {

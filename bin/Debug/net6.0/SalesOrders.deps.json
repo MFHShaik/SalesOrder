@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v6.0": {
       "SalesOrders/1.0.0": {
         "dependencies": {
+          "Microsoft.EntityFrameworkCore": "6.0.0",
           "Microsoft.EntityFrameworkCore.SqlServer": "6.0.0",
           "Microsoft.EntityFrameworkCore.Tools": "6.0.0"
         },
