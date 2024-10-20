@@ -10,24 +10,24 @@ namespace SalesOrders.Services
         {
         }
 
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Order> Orders { get; set; }
-        public DbSet<OrderProduct> OrderProducts { get; set; }
+        public DbSet<Product>? Products { get; set; }
+        public DbSet<Order>? Orders { get; set; }
+        public DbSet<OrdersProduct>? OrdersProducts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Define the composite primary key for OrderProduct
-            modelBuilder.Entity<OrderProduct>()
+            modelBuilder.Entity<OrdersProduct>()
                 .HasKey(op => new { op.OrderId, op.ProductId });
 
             // Define the relationship between Order and OrderProduct
-            modelBuilder.Entity<OrderProduct>()
+            modelBuilder.Entity<OrdersProduct>()
                 .HasOne(op => op.Order)
-                .WithMany(o => o.OrderProducts)
+                .WithMany(o => o.OrdersProducts)
                 .HasForeignKey(op => op.OrderId);
 
             // Define the relationship between Product and OrderProduct
-            modelBuilder.Entity<OrderProduct>()
+            modelBuilder.Entity<OrdersProduct>()
                 .HasOne(op => op.Product)
                 .WithMany(p => p.OrderProducts)
                 .HasForeignKey(op => op.ProductId);
@@ -35,10 +35,6 @@ namespace SalesOrders.Services
             // Specify precision and scale for decimal properties
             modelBuilder.Entity<Order>()
                 .Property(o => o.TotalAmount)
-                .HasColumnType("decimal(18,2)"); // Set precision and scale as needed
-
-            modelBuilder.Entity<OrderProduct>()
-                .Property(op => op.UnitPrice)
                 .HasColumnType("decimal(18,2)"); // Set precision and scale as needed
 
             base.OnModelCreating(modelBuilder);

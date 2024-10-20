@@ -45,6 +45,6 @@ namespace SalesOrders.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        public List<OrderProduct>? OrderProducts { get; set; }
+        public List<OrdersProduct>? OrderProducts { get; set; }
     }
 }

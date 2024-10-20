@@ -23,9 +23,9 @@ namespace SalesOrders.Controllers
                 .Select(order => new OrdersDto
                 {
                     Id = order.Id,  // Necessary for editing and deleting
-                    CustomerName = order.CustomerName,
+                    CustomerName = order.CustomerName ?? "Unknown Customer",
                     OrderDate = order.OrderDate,
-                    Status = order.Status,
+                    Status = order.Status ?? "Pending",
                     TotalAmount = order.TotalAmount
                 }).ToList();
 
@@ -69,44 +69,26 @@ namespace SalesOrders.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Log the validation errors
-                foreach (var state in ModelState)
-                {
-                    var key = state.Key;
-                    var errors = state.Value.Errors;
-                    foreach (var error in errors)
-                    {
-                        // Log the error message (you can replace Console.WriteLine with your logging mechanism)
-                        Console.WriteLine($"Validation Error - Key: {key}, Error: {error.ErrorMessage}");
-                    }
-                }
-
-                var products = await context.Products.Select(p => new ProductDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    SalesPrice = p.SalesPrice,
-                    StockQuantity = p.StockQuantity
-                }).ToListAsync();
-
-                ViewBag.Products = products; // Repopulate products in case of validation errors
                 return View(ordersDto);
             }
 
-            // Create the Order and save to the database without setting the ID manually
+            // Create the order
             var order = new Order
             {
                 CustomerName = ordersDto.CustomerName,
                 OrderDate = ordersDto.OrderDate,
-                Status = ordersDto.Status,
-                TotalAmount = ordersDto.TotalAmount
+                Status = ordersDto.Status ?? "Pending",
+                TotalAmount = 0 // Set initial TotalAmount to 0
             };
 
             await context.Orders.AddAsync(order);
-            await context.SaveChangesAsync(); // Saves the order and generates the OrderId
+            await context.SaveChangesAsync();
 
-            // Redirect to a view where products can be added
-            return RedirectToAction("Create", new { Id = order.Id }); // Redirect to add products to the created order
+            // Alert the user that the order was created successfully
+            TempData["OrderCreated"] = "Order created successfully";
+
+            // Redirect back to the index page
+            return RedirectToAction("Index");
         }
 
         // Edit an existing order
@@ -153,7 +135,7 @@ namespace SalesOrders.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var order = await context.Orders
-                .Include(o => o.OrderProducts) // Include associated products for deletion
+                .Include(o => o.OrdersProducts) // Include associated products for deletion
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
@@ -161,7 +143,7 @@ namespace SalesOrders.Controllers
                 return NotFound();
             }
 
-            context.OrderProducts.RemoveRange(order.OrderProducts); // Remove products first
+            context.OrdersProducts.RemoveRange(order.OrdersProducts); // Remove products first
             context.Orders.Remove(order); // Then remove the order
             await context.SaveChangesAsync();
 

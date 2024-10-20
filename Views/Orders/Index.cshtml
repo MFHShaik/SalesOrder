@@ -2,6 +2,12 @@
 
 @{
     ViewData["Title"] = "Orders";
+    if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" role="alert">
+            @TempData["SuccessMessage"]
+        </div>
+    }
 }
 
 <h1>Orders</h1>
@@ -17,9 +23,9 @@
                 <th>Order ID</th>
                 <th>Customer Name</th>
                 <th>Order Date</th>
-                <th>Status</th> <!-- Added Status Column -->
-                <th>Total Amount</th> <!-- Assuming you have this -->
-                <th></th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Actions</th> <!-- Added an Actions column -->
             </tr>
         </thead>
         <tbody>
@@ -31,8 +37,19 @@
                         <td>@order.Id</td>
                         <td>@order.CustomerName</td>
                         <td>@order.OrderDate.ToShortDateString()</td>
-                        <td>@order.Status</td> <!-- Displaying Status -->
-                        <td>@order.TotalAmount.ToString("C")</td> <!-- Formatting currency -->
+                        <td>@order.Status</td>
+                        <td>@order.TotalAmount.ToString("C")</td>
+                        <td>
+                            @if (order.TotalAmount == 0)
+                            {
+                                <!-- Add Products Button for orders with a total of 0 -->
+                                <a href="@Url.Action("AddProductsToOrder", "OrdersProduct", new { orderId = order.Id })" class="btn btn-primary">Add Products to this Order</a>
+                            }
+                            else
+                            {
+                                <span>No action needed</span>
+                            }
+                        </td>
                         <td>
                             <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-warning">Edit</a>
                             <a href="javascript:void(0);" onclick="confirmDelete('@order.Id');" class="btn btn-danger">Delete</a>
@@ -43,7 +60,7 @@
             else
             {
                 <tr>
-                    <td colspan="5" class="text-center">No orders available.</td> <!-- Empty state message -->
+                    <td colspan="6" class="text-center">No orders available.</td>
                 </tr>
             }
         </tbody>
