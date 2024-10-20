@@ -16,20 +16,25 @@ namespace SalesOrders.Controllers
             this.context = context;
         }
 
-        public IActionResult Index()
+        // Display all order products
+        public async Task<IActionResult> Index()
         {
-            var orderProducts = context.OrdersProducts
-                .Select(op => new OrdersProductDto // OrderProductDto to represent each order line
+            var orderProducts = await context.OrdersProducts
+                .Include(op => op.Product) // Assuming there is a relationship between OrdersProducts and Product
+                .Select(op => new OrdersProductDto
                 {
                     OrderId = op.OrderId,
                     ProductId = op.ProductId,
+                    ProductName = op.Product.Name, // Map the product name from the related Product entity
                     Quantity = op.Quantity,
+                    SalesPrice = op.Product.SalesPrice // Map the price from the related Product entity
                 })
-                .ToList();
+                .ToListAsync();
 
-            return View(orderProducts);
+            return View(orderProducts); // Pass the list to the view
         }
 
+        // GET: Display form to add products to an order
         [HttpGet]
         public async Task<IActionResult> AddProductsToOrder(int orderId)
         {
@@ -62,56 +67,94 @@ namespace SalesOrders.Controllers
             return View(productDtos);  // Pass the mapped ProductDto list to the view
         }
 
+        // POST: Add selected products to the order
         [HttpPost]
-        public IActionResult AddProductsToOrder(int orderId, int productId, int quantity)
+        public async Task<IActionResult> AddProductsToOrder(int orderId, int[] productIds, int[] quantities)
         {
-            var order = context.Orders.FirstOrDefault(o => o.Id == orderId);
-
-            if (order == null)
+            if (productIds.Length != quantities.Length)
             {
-                return NotFound(); // Order should exist
+                return BadRequest("Product IDs and quantities do not match.");
             }
 
-            // Create a new OrdersProduct entry associated with the existing order
-            var orderProduct = new OrdersProduct
+            for (int i = 0; i < productIds.Length; i++)
             {
-                OrderId = orderId,
-                ProductId = productId,
-                Quantity = quantity
-            };
+                int productId = productIds[i];
+                int quantity = quantities[i];
 
-            context.OrdersProducts.Add(orderProduct);
+                var existingOrderProduct = await context.OrdersProducts
+                    .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
 
-            // You might need to update the total amount if necessary here
-            context.SaveChanges();
+                if (existingOrderProduct != null)
+                {
+                    existingOrderProduct.Quantity += quantity;
+                    context.OrdersProducts.Update(existingOrderProduct);
+                }
+                else
+                {
+                    var orderProduct = new OrdersProduct
+                    {
+                        OrderId = orderId,
+                        ProductId = productId,
+                        Quantity = quantity
+                    };
 
-            TempData["SuccessMessage"] = "Product added to order successfully!";
+                    await context.OrdersProducts.AddAsync(orderProduct);
+                }
+            }
+
+            await context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Products added to order successfully!";
             return RedirectToAction("Index");
         }
 
-
+        // POST: Generate and execute SQL script for adding products to the order
         [HttpPost]
-        public async Task<IActionResult> RemoveProductFromOrder(int orderId, int productId)
+        public async Task<IActionResult> GenerateAndExecuteSql(int orderId, string productIds, string quantities)
         {
-            var orderProduct = await context.OrdersProducts
-                .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
+            var productIdArray = productIds.Split(',').Select(int.Parse).ToArray();
+            var quantityArray = quantities.Split(',').Select(int.Parse).ToArray();
 
-            if (orderProduct == null)
+            if (productIdArray.Length != quantityArray.Length)
             {
-                return NotFound("Product not found in the order.");
+                return BadRequest("Product IDs and quantities do not match.");
             }
 
-            // Optionally, you can also restock the product when removing it from the order
-            var product = await context.Products.FindAsync(productId);
-            if (product != null)
+            for (int i = 0; i < productIdArray.Length; i++)
             {
-                product.StockQuantity += orderProduct.Quantity; // Restock the quantity removed
+                int productId = productIdArray[i];
+                int quantity = quantityArray[i];
+
+                var existingOrderProduct = await context.OrdersProducts
+                    .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
+
+                if (existingOrderProduct != null)
+                {
+                    existingOrderProduct.Quantity += quantity;
+                    context.OrdersProducts.Update(existingOrderProduct);
+                }
+                else
+                {
+                    var orderProduct = new OrdersProduct
+                    {
+                        OrderId = orderId,
+                        ProductId = productId,
+                        Quantity = quantity
+                    };
+                    await context.OrdersProducts.AddAsync(orderProduct);
+                }
             }
 
-            context.OrdersProducts.Remove(orderProduct);
-            await context.SaveChangesAsync();
+            try
+            {
+                await context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Products added and SQL executed successfully!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
+            }
 
-            return Ok("Product removed from order.");
+            return RedirectToAction("Index");
         }
     }
 }

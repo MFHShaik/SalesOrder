@@ -10,7 +10,7 @@ namespace SalesOrders.Models
 
         [Required(ErrorMessage = "Customer name is required.")]
         [StringLength(100, ErrorMessage = "Customer name can't be longer than 100 characters.")]
-        public string? CustomerName { get; set; }
+        public string CustomerName { get; set; }  // Non-nullable
 
         [Required(ErrorMessage = "Order date is required.")]
         public DateTime OrderDate { get; set; }
@@ -19,7 +19,9 @@ namespace SalesOrders.Models
         public decimal TotalAmount { get; set; }
 
         [Required(ErrorMessage = "Order status is required.")]
-        public string? Status { get; set; } // New status field
-        public ICollection<OrdersProduct> OrdersProducts { get; set; }
+        public string Status { get; set; }  // Non-nullable
+
+        // Initialized OrdersProducts collection to prevent null reference exceptions
+        public ICollection<OrdersProduct> OrdersProducts { get; set; } = new List<OrdersProduct>();
     }
-    }
+}

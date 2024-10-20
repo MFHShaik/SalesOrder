@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SalesOrders.Models
 {
@@ -9,11 +7,14 @@ namespace SalesOrders.Models
         [Required]
         public int OrderId { get; set; }
 
-        [Required(ErrorMessage = "Product ID is required.")]
+        [Required]
         public int ProductId { get; set; }
 
-        [Required(ErrorMessage = "Quantity is required.")]
-        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1.")]
+        [Required]
         public int Quantity { get; set; }
+
+        public string ProductName { get; set; }
+
+        public decimal SalesPrice { get; set; }
     }
 }

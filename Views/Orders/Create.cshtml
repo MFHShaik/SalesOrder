@@ -15,23 +15,7 @@
         <span asp-validation-for="OrderDate" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-        <label asp-for="Status"></label>
-        <select asp-for="Status" class="form-control" required>
-            <option value="">Select Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Processing">Processing</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-        </select>
-        <span asp-validation-for="Status" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
-        <label for="TotalAmount">Total Amount</label>
-        <input asp-for="TotalAmount" class="form-control" type="text" readonly value="@Model.TotalAmount.ToString("0.00")" />
-        <span asp-validation-for="TotalAmount" class="text-danger"></span>
-    </div>
+    <input type="hidden" asp-for="Status" value="Pending" />
 
     <button type="submit" class="btn btn-primary">Create Order</button>
     <button type="button" id="CancelOrderButton" class="btn btn-danger">Cancel Order</button>

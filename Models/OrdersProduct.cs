@@ -7,17 +7,18 @@ namespace SalesOrders.Models
     {
         [Required]
         public int OrderId { get; set; }
+
         [ForeignKey("OrderId")]
-        public Order Order { get; set; } = new Order();  // Ensures a default value
+        public Order Order { get; set; }
 
         [Required]
         public int ProductId { get; set; }
+
         [ForeignKey("ProductId")]
-        public Product? Product { get; set; }
+        public Product Product { get; set; }
 
         [Required(ErrorMessage = "Quantity is required.")]
         [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1.")]
         public int Quantity { get; set; }
-
     }
 }
