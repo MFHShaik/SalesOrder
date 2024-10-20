@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SalesOrders.Models;
 using SalesOrders.Services;
@@ -22,7 +23,7 @@ namespace SalesOrders.Controllers
             var orders = context.Orders
                 .Select(order => new OrdersDto
                 {
-                    Id = order.Id,  // Necessary for editing and deleting
+                    Id = order.Id,
                     CustomerName = order.CustomerName ?? "Unknown Customer",
                     OrderDate = order.OrderDate,
                     Status = order.Status ?? "Pending",
@@ -35,7 +36,6 @@ namespace SalesOrders.Controllers
         // Show order creation form
         public IActionResult Create(int? Id)
         {
-            // Populate product list for product selection in the view
             var products = context.Products.Select(p => new ProductDto
             {
                 Id = p.Id,
@@ -44,11 +44,10 @@ namespace SalesOrders.Controllers
                 StockQuantity = p.StockQuantity
             }).ToList();
 
-            ViewBag.Products = products; // Pass the products to the view
+            ViewBag.Products = new SelectList(products, "Id", "Name"); // Pass products as SelectList to the view
 
             var ordersDto = new OrdersDto(); // Initialize OrdersDto
 
-            // Set order ID for new or existing orders
             if (!Id.HasValue)
             {
                 var lastOrder = context.Orders.OrderByDescending(o => o.Id).FirstOrDefault();
@@ -72,26 +71,60 @@ namespace SalesOrders.Controllers
                 return View(ordersDto);
             }
 
-            // Create the order
             var order = new Order
             {
                 CustomerName = ordersDto.CustomerName,
                 OrderDate = ordersDto.OrderDate,
                 Status = ordersDto.Status ?? "Pending",
-                TotalAmount = 0 // Set initial TotalAmount to 0
+                TotalAmount = 0 // Initial TotalAmount
             };
 
             await context.Orders.AddAsync(order);
             await context.SaveChangesAsync();
 
-            // Alert the user that the order was created successfully
             TempData["OrderCreated"] = "Order created successfully";
-
-            // Redirect back to the index page
             return RedirectToAction("Index");
         }
 
-        // Edit an existing order
+        // Show the Edit form
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var order = context.Orders
+                .Include(o => o.OrdersProducts)
+                .ThenInclude(op => op.Product)
+                .FirstOrDefault(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var products = context.Products.ToList();
+            ViewBag.Products = new SelectList(products, "Id", "Name");
+
+            var statusOptions = new List<string> { "Pending", "Shipped", "Completed", "Cancelled" };
+            ViewBag.StatusOptions = new SelectList(statusOptions);
+
+            var orderDto = new OrdersDto
+            {
+                Id = order.Id,
+                CustomerName = order.CustomerName,
+                OrderDate = order.OrderDate,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                OrderProducts = order.OrdersProducts.Select(op => new OrdersProductDto
+                {
+                    ProductId = op.ProductId,
+                    ProductName = op.Product.Name,
+                    Quantity = op.Quantity,
+                    SalesPrice = op.Product.SalesPrice
+                }).ToList()
+            };
+
+            return View(orderDto);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(OrdersDto ordersDto)
@@ -101,7 +134,11 @@ namespace SalesOrders.Controllers
                 return View(ordersDto);
             }
 
-            var order = await context.Orders.FindAsync(ordersDto.Id);
+            var order = await context.Orders
+                .Include(o => o.OrdersProducts)
+                .ThenInclude(op => op.Product)
+                .FirstOrDefaultAsync(o => o.Id == ordersDto.Id);
+
             if (order == null)
             {
                 return NotFound();
@@ -110,23 +147,31 @@ namespace SalesOrders.Controllers
             order.CustomerName = ordersDto.CustomerName;
             order.OrderDate = ordersDto.OrderDate;
             order.Status = ordersDto.Status;
-            order.TotalAmount = ordersDto.TotalAmount;
 
-            await context.SaveChangesAsync();
-
-            return RedirectToAction("Index");
-        }
-
-        // Show delete confirmation
-        public IActionResult Delete(int id)
-        {
-            var order = context.Orders.FirstOrDefault(o => o.Id == id);
-            if (order == null)
+            foreach (var dto in ordersDto.OrderProducts)
             {
-                return NotFound();
+                var product = order.OrdersProducts.FirstOrDefault(p => p.ProductId == dto.ProductId);
+                if (product != null)
+                {
+                    product.Quantity = dto.Quantity;
+                }
+                else
+                {
+                    var newProduct = new OrdersProduct
+                    {
+                        ProductId = dto.ProductId,
+                        OrderId = order.Id,
+                        Quantity = dto.Quantity
+                    };
+                    context.OrdersProducts.Add(newProduct);
+                }
             }
 
-            return View(order);
+            order.TotalAmount = ordersDto.OrderProducts.Sum(op => op.Quantity * op.SalesPrice);
+            await context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Order updated successfully!";
+            return RedirectToAction("Index");
         }
 
         // Confirm and delete order along with associated products
@@ -135,7 +180,7 @@ namespace SalesOrders.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var order = await context.Orders
-                .Include(o => o.OrdersProducts) // Include associated products for deletion
+                .Include(o => o.OrdersProducts)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
@@ -143,11 +188,44 @@ namespace SalesOrders.Controllers
                 return NotFound();
             }
 
-            context.OrdersProducts.RemoveRange(order.OrdersProducts); // Remove products first
-            context.Orders.Remove(order); // Then remove the order
+            context.OrdersProducts.RemoveRange(order.OrdersProducts);
+            context.Orders.Remove(order);
             await context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // View the details of an order, including all associated products
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var order = await context.Orders
+                .Include(o => o.OrdersProducts)
+                .ThenInclude(op => op.Product)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound("Order not found.");
+            }
+
+            var orderDto = new OrdersDto
+            {
+                Id = order.Id,
+                CustomerName = order.CustomerName,
+                OrderDate = order.OrderDate,
+                Status = order.Status,
+                TotalAmount = order.TotalAmount,
+                OrderProducts = order.OrdersProducts.Select(op => new OrdersProductDto
+                {
+                    ProductId = op.ProductId,
+                    ProductName = op.Product.Name,
+                    Quantity = op.Quantity,
+                    SalesPrice = op.Product.SalesPrice
+                }).ToList()
+            };
+
+            return View(orderDto);
         }
     }
 }

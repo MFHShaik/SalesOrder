@@ -23,12 +23,7 @@
 
     <div class="form-group">
         <label asp-for="Status" class="control-label">Order Status</label>
-        <select asp-for="Status" class="form-control">
-            Pending
-            Shipped
-            Completed
-            Cancelled
-        </select>
+        <select asp-for="Status" asp-items="ViewBag.StatusOptions" class="form-control"></select>
         <span asp-validation-for="Status" class="text-danger"></span>
     </div>
 
@@ -39,7 +34,8 @@
                 <th>Product</th>
                 <th>Quantity</th>
                 <th>Unit Price</th>
-                <th></th>
+                <th>Total</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody id="product-list">
@@ -47,26 +43,32 @@
             {
                 <tr>
                     <td>
-                        <input asp-for="@Model.OrderProducts[i].ProductId" class="form-control" hidden />
-                        <select asp-for="@Model.OrderProducts[i].ProductId" class="form-control">
-                            <option value="">Select Product</option>
-                            <!-- Populate with real product data -->
-                            Product A
-                            Product B
-                        </select>
+                        @Model.OrderProducts[i].ProductName
+                        <input asp-for="@Model.OrderProducts[i].ProductId" hidden />
                     </td>
                     <td>
-                        <input asp-for="@Model.OrderProducts[i].Quantity" class="form-control" />
+                        <input asp-for="@Model.OrderProducts[i].Quantity" class="form-control quantity-input" data-index="@i" />
+                    </td>
+                    <td>R @Model.OrderProducts[i].SalesPrice.ToString("0.00")</td>
+                    <td>
+                        <span class="total-price" data-index="@i">
+                            R @(Model.OrderProducts[i].SalesPrice * Model.OrderProducts[i].Quantity).ToString("0.00")
+                        </span>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-danger" onclick="removeProductRow(this)">Remove</button>
+                        <button type="button" class="btn btn-danger" onclick="removeProductRow(this, '@Model.OrderProducts[i].ProductId')">Remove</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 
-    <button type="button" class="btn btn-secondary" onclick="addProductRow()">Add Product</button>
+    <input type="hidden" id="deletedProducts" name="DeletedProductIds" />
+
+    <h4>Total: R <span id="total-amount">@Model.TotalAmount.ToString("0.00")</span></h4>
+
+    <!-- Redirect button to Add Products page -->
+    <a href="@Url.Action("AddProductsToOrder", "OrdersProduct", new { orderId = Model.Id })" class="btn btn-secondary">Add Products</a>
 
     <div class="form-group mt-4">
         <input type="submit" value="Save" class="btn btn-primary" />
@@ -75,27 +77,43 @@
 
 @section Scripts {
     <script>
-        function addProductRow() {
-            const row = `
-                <tr>
-                    <td>
-                        <input type="hidden" name="OrderProducts.Index" value="-1" />
-                        <select name="OrderProducts[-1].ProductId" class="form-control">
-                            <option value="">Select Product</option>
-                            <option value="1">Product A</option>
-                            <option value="2">Product B</option>
-                        </select>
-                    </td>
-                    <td><input name="OrderProducts[-1].Quantity" class="form-control" /></td>
-                    <td><input name="OrderProducts[-1].UnitPrice" class="form-control" /></td>
-                    <td><button type="button" class="btn btn-danger" onclick="removeProductRow(this)">Remove</button></td>
-                </tr>`;
-            document.getElementById('product-list').insertAdjacentHTML('beforeend', row);
+        document.addEventListener('DOMContentLoaded', function () {
+            const quantities = document.querySelectorAll('.quantity-input');
+            quantities.forEach(input => {
+                input.addEventListener('change', updateLineTotal);
+            });
+        });
+
+        function updateLineTotal(event) {
+            const input = event.target;
+            const row = input.closest('tr');
+            const price = parseFloat(row.querySelector('.unit-price').innerText.replace('R', ''));
+            const quantity = parseInt(input.value);
+            const total = price * quantity;
+            row.querySelector('.total-price').innerText = `R ${total.toFixed(2)}`;
+
+            updateTotalAmount();
         }
 
         function removeProductRow(button) {
             const row = button.closest('tr');
             row.remove();
+            updateTotalAmount();
+        }
+
+        function updateTotalAmount() {
+            let totalAmount = 0;
+            document.querySelectorAll('.total-price').forEach(element => {
+                const total = parseFloat(element.innerText.replace('R', ''));
+                totalAmount += total;
+            });
+            document.getElementById('total-amount').innerText = `R ${totalAmount.toFixed(2)}`;
+            document.getElementById('totalAmountInput').value = totalAmount;
+        }
+
+        function addProductRow() {
+            // Implementation for adding a product row
+            // Ensure you call updateTotalAmount after a row is added
         }
     </script>
 }

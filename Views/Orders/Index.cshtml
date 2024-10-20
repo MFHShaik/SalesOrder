@@ -17,7 +17,7 @@
 </p>
 
 <div class="table-responsive">
-    <table class="table">
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Order ID</th>
@@ -43,11 +43,12 @@
                             @if (order.TotalAmount == 0)
                             {
                                 <!-- Add Products Button for orders with a total of 0 -->
-                                <a href="@Url.Action("AddProductsToOrder", "OrdersProduct", new { orderId = order.Id })" class="btn btn-primary">Add Products to this Order</a>
+                                <a href="@Url.Action("AddProductsToOrder", "OrdersProduct", new { orderId = order.Id })" class="btn btn-primary">Add Products</a>
                             }
                             else
                             {
-                                <span>No action needed</span>
+                                <!-- View Details Button -->
+                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-primary">View Details</a>
                             }
                         </td>
                         <td>
@@ -60,7 +61,7 @@
             else
             {
                 <tr>
-                    <td colspan="6" class="text-center">No orders available.</td>
+                    <td colspan="7" class="text-center">No orders available.</td>
                 </tr>
             }
         </tbody>

@@ -63,3 +63,4 @@ C:\Users\Mohammed\OneDrive\Desktop\Code\Practice\Using C#\SalesOrders\obj\Debug\
 C:\Users\Mohammed\OneDrive\Desktop\Code\Practice\Using C#\SalesOrders\obj\Debug\net6.0\SalesOrders.pdb
 C:\Users\Mohammed\OneDrive\Desktop\Code\Practice\Using C#\SalesOrders\obj\Debug\net6.0\SalesOrders.genruntimeconfig.cache
 C:\Users\Mohammed\OneDrive\Desktop\Code\Practice\Using C#\SalesOrders\obj\Debug\net6.0\ref\SalesOrders.dll
+C:\Users\Mohammed\OneDrive\Desktop\Code\Practice\Using C#\SalesOrders\bin\Debug\net6.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll

@@ -129,11 +129,13 @@ namespace SalesOrders.Controllers
 
                 if (existingOrderProduct != null)
                 {
+                    // If the product already exists, update the quantity
                     existingOrderProduct.Quantity += quantity;
                     context.OrdersProducts.Update(existingOrderProduct);
                 }
                 else
                 {
+                    // If the product is new, create a new OrdersProduct entry
                     var orderProduct = new OrdersProduct
                     {
                         OrderId = orderId,
@@ -144,16 +146,24 @@ namespace SalesOrders.Controllers
                 }
             }
 
-            try
+            // Save changes in the OrdersProducts table
+            await context.SaveChangesAsync();
+
+            // Calculate the new total amount for the order
+            var totalAmount = await context.OrdersProducts
+                .Where(op => op.OrderId == orderId)
+                .SumAsync(op => op.Quantity * op.Product.SalesPrice);
+
+            // Update the total amount in the Order table
+            var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            if (order != null)
             {
+                order.TotalAmount = totalAmount;
+                context.Orders.Update(order);
                 await context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Products added and SQL executed successfully!";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
             }
 
+            TempData["SuccessMessage"] = "Products added and order total updated successfully!";
             return RedirectToAction("Index");
         }
     }
