@@ -18,9 +18,13 @@ namespace SalesOrders.Controllers
         }
 
         // List all orders
-        public IActionResult Index()
+        public IActionResult Index(string searchTerm)
         {
-            var orders = context.Orders
+            // Store the search term in ViewData to persist it in the search form
+            ViewData["CurrentFilter"] = searchTerm;
+
+            // Retrieve and filter orders based on the search term
+            var ordersQuery = context.Orders
                 .Select(order => new OrdersDto
                 {
                     Id = order.Id,
@@ -28,7 +32,20 @@ namespace SalesOrders.Controllers
                     OrderDate = order.OrderDate,
                     Status = order.Status ?? "Pending",
                     TotalAmount = order.TotalAmount
-                }).ToList();
+                });
+
+            // If a search term is provided, filter the orders
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                ordersQuery = ordersQuery.Where(o =>
+                    o.Id.ToString().Contains(searchTerm) ||
+                    o.CustomerName.Contains(searchTerm) ||
+                    o.OrderDate.ToString().Contains(searchTerm) ||
+                    o.Status.Contains(searchTerm));
+            }
+
+            // Execute the query and return the filtered results
+            var orders = ordersQuery.ToList();
 
             return View(orders);
         }
@@ -129,14 +146,15 @@ namespace SalesOrders.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(OrdersDto ordersDto)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 return View(ordersDto);
             }
 
+            // Fetch the order and its products
             var order = await context.Orders
                 .Include(o => o.OrdersProducts)
-                .ThenInclude(op => op.Product)
+                .ThenInclude(op => op.Product) // Include products to access stock
                 .FirstOrDefaultAsync(o => o.Id == ordersDto.Id);
 
             if (order == null)
@@ -144,35 +162,91 @@ namespace SalesOrders.Controllers
                 return NotFound();
             }
 
+            // Update order details
             order.CustomerName = ordersDto.CustomerName;
             order.OrderDate = ordersDto.OrderDate;
             order.Status = ordersDto.Status;
 
+            // Recalculate total amount
+            decimal totalAmount = 0;
+
+            // Iterate over the DTO products and update the corresponding order products
             foreach (var dto in ordersDto.OrderProducts)
             {
-                var product = order.OrdersProducts.FirstOrDefault(p => p.ProductId == dto.ProductId);
-                if (product != null)
+                var existingOrderProduct = order.OrdersProducts.FirstOrDefault(p => p.ProductId == dto.ProductId);
+
+                if (existingOrderProduct != null)
                 {
-                    product.Quantity = dto.Quantity;
+                    // Adjust stock based on quantity changes
+                    var originalQuantity = existingOrderProduct.Quantity;
+                    var newQuantity = dto.Quantity;
+                    var difference = newQuantity - originalQuantity;
+
+                    if (difference > 0)
+                    {
+                        // Reduce stock for increased quantity
+                        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+                        if (product.StockQuantity < difference)
+                        {
+                            return BadRequest($"Not enough stock for product {product.Name}. Available: {product.StockQuantity}, requested: {difference}.");
+                        }
+                        product.StockQuantity -= difference;
+                    }
+                    else if (difference < 0)
+                    {
+                        // Increase stock for decreased quantity
+                        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+                        product.StockQuantity += Math.Abs(difference);
+                    }
+
+                    // Update the order product's quantity
+                    existingOrderProduct.Quantity = newQuantity;
+
+                    // Calculate total amount for this product
+                    totalAmount += existingOrderProduct.Quantity * existingOrderProduct.Product.SalesPrice;
+
+                    // Mark the order product as modified
+                    context.Entry(existingOrderProduct).State = EntityState.Modified;
                 }
                 else
                 {
+                    // Handle new products added to the order
+                    var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+                    if (product == null || product.StockQuantity < dto.Quantity)
+                    {
+                        return BadRequest($"Not enough stock for product {dto.ProductName}. Available: {product?.StockQuantity ?? 0}, requested: {dto.Quantity}.");
+                    }
+
+                    // Reduce the stock for the new product
+                    product.StockQuantity -= dto.Quantity;
+
                     var newProduct = new OrdersProduct
                     {
                         ProductId = dto.ProductId,
                         OrderId = order.Id,
                         Quantity = dto.Quantity
                     };
-                    context.OrdersProducts.Add(newProduct);
+                    await context.OrdersProducts.AddAsync(newProduct);
+
+                    // Calculate total amount for the new product
+                    totalAmount += newProduct.Quantity * product.SalesPrice;
                 }
             }
 
-            order.TotalAmount = ordersDto.OrderProducts.Sum(op => op.Quantity * op.SalesPrice);
+            // Update the total amount for the order
+            order.TotalAmount = totalAmount;
+
+            // Explicitly mark the order as modified
+            context.Entry(order).State = EntityState.Modified;
+
+            // Save all changes to the database
             await context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Order updated successfully!";
             return RedirectToAction("Index");
         }
+
+
 
         // GET: Orders/Delete
         [HttpGet]

@@ -1,106 +1,158 @@
 ﻿@model IEnumerable<SalesOrders.Models.ProductDto>
 
-<h2>Add Products to Order</h2>
+<div class="container mt-4">
+    <h2 class="text-center mb-5">Add Products to Order</h2>
 
-<form asp-action="GenerateAndExecuteSql" method="post" id="addProductForm">
-    <input type="hidden" name="orderId" value="@ViewBag.OrderId" />
-    <input type="hidden" name="productIds" id="productIdsInput" />
-    <input type="hidden" name="quantities" id="quantitiesInput" />
+    <form asp-action="GenerateAndExecuteSql" method="post" id="addProductForm">
+        <input type="hidden" name="orderId" value="@ViewBag.OrderId" />
+        <input type="hidden" name="productIds" id="productIdsInput" />
+        <input type="hidden" name="quantities" id="quantitiesInput" />
 
-    <div class="form-group">
-        <label for="ProductSelection">Select Product</label>
-        <select id="ProductSelection" class="form-control">
-            @foreach (var product in Model)
-            {
-                <option value="@product.Id" data-price="@product.SalesPrice">
-                    @product.Name (@product.StockQuantity available) - R @product.SalesPrice.ToString("0.00")
-                </option>
+        <!-- Product Selection -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    <label for="ProductSelection" class="form-label">Select Product</label>
+                    <select id="ProductSelection" class="form-control">
+                        @foreach (var product in Model)
+                        {
+                            <option value="@product.Id" data-price="@product.SalesPrice">
+                                @product.Name (@product.StockQuantity available) - R @product.SalesPrice.ToString("0.00")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="Quantity" class="form-label">Quantity</label>
+                    <input type="number" id="Quantity" class="form-control" min="1" value="1" required />
+                </div>
+
+                <button type="button" class="btn btn-primary" id="addProductButton">
+                    <i class="bi bi-plus-circle"></i> Add Product
+                </button>
+            </div>
+        </div>
+
+        <!-- Selected Products Table -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h3>Selected Products</h3>
+                <table class="table table-bordered table-hover" id="selectedProductsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Price (R)</th>
+                            <th>Total (R)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Selected products will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Total Cost -->
+        <h3 class="text-end">Total Cost: <span id="totalCost" class="fw-bold">R0.00</span></h3>
+
+        <!-- Submit Button -->
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-check-circle"></i> Submit Products
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const addProductButton = document.getElementById('addProductButton');
+        const selectedProductsTable = document.getElementById('selectedProductsTable').querySelector('tbody');
+        const totalCostElement = document.getElementById('totalCost');
+        const productIdsInput = document.getElementById('productIdsInput');
+        const quantitiesInput = document.getElementById('quantitiesInput');
+        let totalCost = 0;
+
+        // Add product to table or update the quantity if already added
+        addProductButton.addEventListener('click', function () {
+            const productSelect = document.getElementById('ProductSelection');
+            const quantityInput = document.getElementById('Quantity');
+
+            const selectedProductId = productSelect.value;
+            const selectedProductText = productSelect.options[productSelect.selectedIndex].text;
+            const quantity = parseInt(quantityInput.value);
+            const price = parseFloat(productSelect.options[productSelect.selectedIndex].dataset.price);
+
+            if (quantity < 1) {
+                alert('Please enter a valid quantity.');
+                return;
             }
-        </select>
-    </div>
 
-    <div class="form-group">
-        <label for="Quantity">Quantity</label>
-        <input type="number" id="Quantity" class="form-control" min="1" value="1" required />
-    </div>
+            // Check if the product is already in the table
+            const existingRow = Array.from(selectedProductsTable.querySelectorAll('tr')).find(row => {
+                return row.querySelector('.product-id').value === selectedProductId;
+            });
 
-    <button type="button" class="btn btn-primary" id="addProductButton">Add Product</button>
+            if (existingRow) {
+                // Update the quantity and total price if the product is already added
+                const quantityCell = existingRow.cells[1];
+                const totalPriceCell = existingRow.cells[3];
 
-    <h3>Selected Products</h3>
-    <table class="table table-bordered" id="selectedProductsTable">
-        <thead>
-            <tr>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Price (R)</th>
-                <th>Total (R)</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Selected products will be added here -->
-        </tbody>
-    </table>
+                const currentQuantity = parseInt(quantityCell.textContent);
+                const newQuantity = currentQuantity + quantity;
+                const newTotalPrice = newQuantity * price;
 
-    <h3>Total Cost: <span id="totalCost">R0.00</span></h3>
+                quantityCell.textContent = newQuantity;
+                totalPriceCell.textContent = `R${newTotalPrice.toFixed(2)}`;
 
-    <button type="submit" class="btn btn-success" id="submitProductsButton">Submit Products</button>
-</form>
+                // Update the total cost
+                totalCost += price * quantity;
+            } else {
+                // Add a new row for the product if it's not already in the table
+                const totalProductCost = price * quantity;
+                totalCost += totalProductCost;
 
-<script>
-    const addProductButton = document.getElementById('addProductButton');
-    const selectedProductsTable = document.getElementById('selectedProductsTable').querySelector('tbody');
-    const totalCostElement = document.getElementById('totalCost');
-    const productIdsInput = document.getElementById('productIdsInput');
-    const quantitiesInput = document.getElementById('quantitiesInput');
-    let totalCost = 0;
+                const newRow = selectedProductsTable.insertRow();
+                newRow.innerHTML = `
+                            <td>${selectedProductText} <input type="hidden" class="product-id" value="${selectedProductId}" /></td>
+                            <td>${quantity}</td>
+                            <td>R${price.toFixed(2)}</td>
+                            <td>R${totalProductCost.toFixed(2)}</td>
+                            <td><button type="button" class="btn btn-danger remove-product"><i class="bi bi-trash"></i> Remove</button></td>
+                        `;
 
-    addProductButton.addEventListener('click', function () {
-        const productSelect = document.getElementById('ProductSelection');
-        const quantityInput = document.getElementById('Quantity');
+                // Remove product functionality
+                const removeButton = newRow.querySelector('.remove-product');
+                removeButton.addEventListener('click', function () {
+                    selectedProductsTable.deleteRow(newRow.rowIndex - 1);
+                    totalCost -= totalProductCost;
+                    totalCostElement.textContent = `R${totalCost.toFixed(2)}`;
+                });
+            }
 
-        const selectedProductId = productSelect.value;
-        const selectedProductText = productSelect.options[productSelect.selectedIndex].text;
-        const quantity = parseInt(quantityInput.value);
-        const price = parseFloat(productSelect.options[productSelect.selectedIndex].dataset.price);
-
-        const totalProductCost = price * quantity;
-        totalCost += totalProductCost;
-
-        const newRow = selectedProductsTable.insertRow();
-        newRow.innerHTML = `
-                <td>${selectedProductText} <input type="hidden" class="product-id" value="${selectedProductId}"/></td>
-                <td>${quantity}</td>
-                <td>R${price.toFixed(2)}</td>
-                <td>R${totalProductCost.toFixed(2)}</td>
-                <td><button type="button" class="btn btn-danger remove-product">Remove</button></td>
-            `;
-
-        const removeButton = newRow.querySelector('.remove-product');
-        removeButton.addEventListener('click', function () {
-            selectedProductsTable.deleteRow(newRow.rowIndex - 1);
-            totalCost -= totalProductCost;
             totalCostElement.textContent = `R${totalCost.toFixed(2)}`;
+            productSelect.selectedIndex = 0;
+            quantityInput.value = 1;
         });
 
-        totalCostElement.textContent = `R${totalCost.toFixed(2)}`;
-        productSelect.selectedIndex = 0;
-        quantityInput.value = 1;
-    });
+        // Form submission: store selected product IDs and quantities
+        document.getElementById('addProductForm').addEventListener('submit', function (event) {
+            const productIds = [];
+            const quantities = [];
 
-    document.getElementById('addProductForm').addEventListener('submit', function (event) {
-        const productIds = [];
-        const quantities = [];
+            const rows = selectedProductsTable.getElementsByTagName('tr');
+            for (let row of rows) {
+                const quantity = row.cells[1].textContent;
+                const productId = row.cells[0].querySelector('.product-id').value;
+                productIds.push(productId);
+                quantities.push(quantity);
+            }
 
-        const rows = selectedProductsTable.getElementsByTagName('tr');
-        for (let row of rows) {
-            const quantity = row.cells[1].textContent;
-            const productId = row.cells[0].querySelector('.product-id').value;
-            productIds.push(productId);
-            quantities.push(quantity);
-        }
-
-        productIdsInput.value = productIds.join(',');
-        quantitiesInput.value = quantities.join(',');
-    });
-</script>
+            productIdsInput.value = productIds.join(',');
+            quantitiesInput.value = quantities.join(',');
+        });
+    </script>
+}

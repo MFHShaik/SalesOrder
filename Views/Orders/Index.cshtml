@@ -1,13 +1,10 @@
-﻿@model IEnumerable<SalesOrders.Models.OrdersDto>
+﻿@using System.Globalization
+
+@model IEnumerable<SalesOrders.Models.OrdersDto>
 
 @{
     ViewData["Title"] = "Orders";
-    if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success" role="alert">
-            @TempData["SuccessMessage"]
-        </div>
-    }
+    var southAfricaCulture = new CultureInfo("en-ZA"); // South African Rand (ZAR) culture
 }
 
 <h1>Orders</h1>
@@ -15,6 +12,15 @@
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New Order</a>
 </p>
+
+<!-- Search Form -->
+@using (Html.BeginForm("Index", "Orders", FormMethod.Get))
+{
+    <div class="input-group mb-3">
+        <input type="text" name="searchTerm" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search orders by ID, Customer Name, or Date" />
+        <button class="btn btn-primary" type="submit">Search</button>
+    </div>
+}
 
 <div class="table-responsive">
     <table class="table table-bordered">
@@ -25,7 +31,7 @@
                 <th>Order Date</th>
                 <th>Status</th>
                 <th>Total Amount</th>
-                <th>Actions</th> <!-- Added an Actions column -->
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -37,8 +43,13 @@
                         <td>@order.Id</td>
                         <td>@order.CustomerName</td>
                         <td>@order.OrderDate.ToShortDateString()</td>
-                        <td>@order.Status</td>
-                        <td>@order.TotalAmount.ToString("C")</td>
+                        <td>
+                            <span class="badge @GetStatusBadgeClass(order.Status)">
+                                @order.Status
+                            </span>
+                        </td>
+                        <!-- Use South African Rands (ZAR) currency format -->
+                        <td>@order.TotalAmount.ToString("C", southAfricaCulture)</td>
                         <td>
                             @if (order.TotalAmount == 0)
                             {
@@ -71,8 +82,24 @@
 <script>
     function confirmDelete(orderId) {
         if (confirm('Are you sure you want to delete this order?')) {
-            // Redirect to the delete action
             window.location.href = '@Url.Action("Delete", "Orders")/' + orderId;
         }
     }
 </script>
+
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        switch (status)
+        {
+            case "Pending":
+                return "bg-warning";
+            case "Completed":
+                return "bg-success";
+            case "Cancelled":
+                return "bg-danger";
+            default:
+                return "bg-secondary";
+        }
+    }
+}

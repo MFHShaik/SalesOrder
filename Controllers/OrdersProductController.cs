@@ -69,6 +69,7 @@ namespace SalesOrders.Controllers
 
         // POST: Add selected products to the order
         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> AddProductsToOrder(int orderId, int[] productIds, int[] quantities)
         {
             if (productIds.Length != quantities.Length)
@@ -80,6 +81,23 @@ namespace SalesOrders.Controllers
             {
                 int productId = productIds[i];
                 int quantity = quantities[i];
+
+                // Find the product to update the stock quantity
+                var product = await context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+                if (product == null)
+                {
+                    return BadRequest($"Product with ID {productId} not found.");
+                }
+
+                // Check if stock is sufficient
+                if (product.StockQuantity < quantity)
+                {
+                    return BadRequest($"Not enough stock for product {product.Name}. Available: {product.StockQuantity}, requested: {quantity}.");
+                }
+
+                // Reduce the stock quantity
+                product.StockQuantity -= quantity;
+                context.Products.Update(product);
 
                 var existingOrderProduct = await context.OrdersProducts
                     .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
@@ -103,9 +121,10 @@ namespace SalesOrders.Controllers
             }
 
             await context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Products added to order successfully!";
-            return RedirectToAction("Index");
+            TempData["SuccessMessage"] = "Products added to order and stock updated successfully!";
+            return RedirectToAction("Index","Orders");
         }
+
 
         // POST: Generate and execute SQL script for adding products to the order
         [HttpPost]
@@ -124,18 +143,35 @@ namespace SalesOrders.Controllers
                 int productId = productIdArray[i];
                 int quantity = quantityArray[i];
 
+                // Find the product to update stock quantity
+                var product = await context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+                if (product == null)
+                {
+                    return BadRequest($"Product with ID {productId} not found.");
+                }
+
+                // Check stock availability
+                if (product.StockQuantity < quantity)
+                {
+                    return BadRequest($"Not enough stock for product {product.Name}. Available: {product.StockQuantity}, requested: {quantity}.");
+                }
+
+                // Reduce the stock quantity
+                product.StockQuantity -= quantity;
+                context.Products.Update(product);
+
                 var existingOrderProduct = await context.OrdersProducts
                     .FirstOrDefaultAsync(op => op.OrderId == orderId && op.ProductId == productId);
 
                 if (existingOrderProduct != null)
                 {
-                    // If the product already exists, update the quantity
+                    // Update the quantity if the product is already in the order
                     existingOrderProduct.Quantity += quantity;
                     context.OrdersProducts.Update(existingOrderProduct);
                 }
                 else
                 {
-                    // If the product is new, create a new OrdersProduct entry
+                    // Create a new order product if it doesn't exist
                     var orderProduct = new OrdersProduct
                     {
                         OrderId = orderId,
@@ -146,15 +182,14 @@ namespace SalesOrders.Controllers
                 }
             }
 
-            // Save changes in the OrdersProducts table
+            // Save changes in the OrdersProducts and Products tables
             await context.SaveChangesAsync();
 
-            // Calculate the new total amount for the order
+            // Update the total amount in the Order table
             var totalAmount = await context.OrdersProducts
                 .Where(op => op.OrderId == orderId)
                 .SumAsync(op => op.Quantity * op.Product.SalesPrice);
 
-            // Update the total amount in the Order table
             var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
             if (order != null)
             {
@@ -163,8 +198,9 @@ namespace SalesOrders.Controllers
                 await context.SaveChangesAsync();
             }
 
-            TempData["SuccessMessage"] = "Products added and order total updated successfully!";
-            return RedirectToAction("Index");
+            TempData["SuccessMessage"] = "Products added, stock updated, and order total updated successfully!";
+            return RedirectToAction("Index", "Orders");
         }
+
     }
 }

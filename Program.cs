@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using SalesOrders.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied"; // Path for access denied
 });
 
+// Register the OrderService
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+builder.Services.AddHttpClient();   
+
 // Build the app
 var app = builder.Build();
 
@@ -85,7 +93,7 @@ using (var scope = app.Services.CreateScope())
 app.Run();
 
 // Method to seed an admin user and a regular user
-async Task SeedUsersAsync(IServiceProvider serviceProvider)
+static async Task SeedUsersAsync(IServiceProvider serviceProvider)
 {
     var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();

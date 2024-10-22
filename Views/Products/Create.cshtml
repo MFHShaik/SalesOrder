@@ -1,71 +1,140 @@
 ﻿@model SalesOrders.Models.ProductDto
 
-@{
-}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Card for styling the form -->
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2><i class="bi bi-box-seam me-2"></i>Create New Product</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" class="needs-validation" novalidate>
+                        <!-- Product Name -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="form-label">Product Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-pencil"></i></span>
+                                <input asp-for="Name" class="form-control" placeholder="Enter product name" required />
+                            </div>
+                            <div class="invalid-feedback">Please enter a product name.</div>
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
 
-<div class="container">
-    <h2 class="text-center mb-5">Create</h2>
+                        <!-- Product Description -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-file-earmark-text"></i></span>
+                                <textarea asp-for="Description" class="form-control" placeholder="Enter product description" rows="3" required></textarea>
+                            </div>
+                            <div class="invalid-feedback">Please provide a description.</div>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
 
-    <form asp-action="Create" method="post" class="needs-validation" novalidate>
-        <div class="form-group mb-3">
-            <label asp-for="Name" class="form-label">Name</label>
-            <input asp-for="Name" class="form-control" placeholder="Enter product name" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+                        <!-- Product Code -->
+                        <div class="form-group mb-3">
+                            <label asp-for="ProductCode" class="form-label">Product Code</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-barcode"></i></span>
+                                <input asp-for="ProductCode" class="form-control" placeholder="Enter product code" required />
+                            </div>
+                            <div class="invalid-feedback">Please enter a product code.</div>
+                            <span asp-validation-for="ProductCode" class="text-danger"></span>
+                        </div>
+
+                        <!-- Product Type -->
+                        <div class="form-group mb-3">
+                            <label asp-for="ProductType" class="form-label">Product Type</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-list"></i></span>
+                                <select asp-for="ProductType" class="form-control" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Apparel">Apparel</option>
+                                    <option value="Parts">Parts</option>
+                                    <option value="Equipment">Equipment</option>
+                                    <option value="Motor">Motor</option>
+                                </select>
+                            </div>
+                            <div class="invalid-feedback">Please select a product type.</div>
+                            <span asp-validation-for="ProductType" class="text-danger"></span>
+                        </div>
+
+                        <!-- Cost Price -->
+                        <div class="form-group mb-3">
+                            <label asp-for="CostPrice" class="form-label">Cost Price (R)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <input asp-for="CostPrice" type="number" class="form-control" placeholder="Enter cost price" step="0.01" required />
+                            </div>
+                            <div class="invalid-feedback">Please enter the cost price.</div>
+                            <span asp-validation-for="CostPrice" class="text-danger"></span>
+                        </div>
+
+                        <!-- Sales Price -->
+                        <div class="form-group mb-3">
+                            <label asp-for="SalesPrice" class="form-label">Sales Price (R)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+                                <input asp-for="SalesPrice" type="number" class="form-control" placeholder="Enter sales price" step="0.01" required />
+                            </div>
+                            <div class="invalid-feedback">Please enter the sales price.</div>
+                            <span asp-validation-for="SalesPrice" class="text-danger"></span>
+                        </div>
+
+                        <!-- Staff Discounted Price -->
+                        <div class="form-group mb-3">
+                            <label asp-for="StaffDiscountedPrice" class="form-label">Staff Discounted Price (R)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-tag-fill"></i></span>
+                                <input asp-for="StaffDiscountedPrice" type="number" class="form-control" placeholder="Enter staff discounted price" step="0.01" required />
+                            </div>
+                            <div class="invalid-feedback">Please enter the staff discounted price.</div>
+                            <span asp-validation-for="StaffDiscountedPrice" class="text-danger"></span>
+                        </div>
+
+                        <!-- Stock Quantity -->
+                        <div class="form-group mb-3">
+                            <label asp-for="StockQuantity" class="form-label">Stock Quantity</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-stack"></i></span>
+                                <input asp-for="StockQuantity" type="number" class="form-control" placeholder="Enter stock quantity" min="1" required />
+                            </div>
+                            <div class="invalid-feedback">Please enter a valid stock quantity.</div>
+                            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-save-fill me-1"></i> Save Product
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle-fill me-1"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="Description" class="form-label">Description</label>
-            <textarea asp-for="Description" class="form-control" placeholder="Enter product description"></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="ProductCode" class="form-label">Product Code</label>
-            <input asp-for="ProductCode" class="form-control" placeholder="Enter product code" />
-            <span asp-validation-for="ProductCode" class="text-danger"></span>
-        </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="ProductType" class="form-label">Product Type</label>
-            <select asp-for="ProductType" class="form-control">
-                <option value="">Select Type</option>
-                <option value="Apparel">Apparel</option>
-                <option value="Parts">Parts</option>
-                <option value="Equipment">Equipment</option>
-                <option value="Motor">Motor</option>
-            </select>
-            <span asp-validation-for="ProductType" class="text-danger"></span>
-        </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="CostPrice" class="form-label">Cost Price</label>
-            <input asp-for="CostPrice" type="number" class="form-control" placeholder="Enter cost price" />
-            <span asp-validation-for="CostPrice" class="text-danger"></span>
-        </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="SalesPrice" class="form-label">Sales Price</label>
-            <input asp-for="SalesPrice" type="number" class="form-control" placeholder="Enter sales price" />
-            <span asp-validation-for="SalesPrice" class="text-danger"></span>
-        </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="StaffDiscountedPrice" class="form-label">Staff Discounted Price</label>
-            <input asp-for="StaffDiscountedPrice" type="number" class="form-control" placeholder="Enter staff discounted price" />
-            <span asp-validation-for="StaffDiscountedPrice" class="text-danger"></span>
-        </div>
-
-        <div class="form-group mb-3">
-            <label asp-for="StockQuantity" class="form-label">Stock Quantity</label>
-            <input asp-for="StockQuantity" type="number" class="form-control" placeholder="Enter stock quantity" />
-            <span asp-validation-for="StockQuantity" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save Product</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            'use strict';
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
 }

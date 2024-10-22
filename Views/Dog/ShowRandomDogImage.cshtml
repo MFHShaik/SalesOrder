@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Random Dog Image";
+}
+
+<h2>Get a Random Dog Image</h2>
+
+<button id="getDogImage" class="btn btn-primary">Fetch Dog Image</button>
+
+<div id="dogImageContainer" class="mt-3">
+    <img id="dogImage" src="" alt="Random Dog" style="max-width: 100%; height: auto;" />
+</div>
+
+<script>
+    document.getElementById('getDogImage').addEventListener('click', function () {
+        fetch('/Dog/GetDogImage')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('dogImage').src = data;
+            })
+            .catch(error => console.log(error));
+    });
+</script>

@@ -1,35 +1,61 @@
 ﻿@model SalesOrders.Models.OrdersDto
 
-<h1>Order Details</h1>
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <h1><i class="bi bi-receipt me-2"></i>Order Details</h1>
+        </div>
+    </div>
 
-<div>
-    <h3>Order ID: @Model.Id</h3>
-    <p>Customer Name: @Model.CustomerName</p>
-    <p>Order Date: @Model.OrderDate.ToShortDateString()</p>
-    <p>Total Amount: @Model.TotalAmount.ToString("C")</p>
+    <div class="card shadow-lg mb-4">
+        <div class="card-body">
+            <h3 class="card-title">Order Information</h3>
+            <p><strong>Order ID:</strong> @Model.Id</p>
+            <p><strong>Customer Name:</strong> @Model.CustomerName</p>
+            <p><strong>Order Date:</strong> @Model.OrderDate.ToShortDateString()</p>
+            <p><strong>Total Amount:</strong> @Model.TotalAmount.ToString("C")</p>
+        </div>
+    </div>
+
+    <div class="card shadow-lg mb-4">
+        <div class="card-body">
+            <h2><i class="bi bi-box-seam me-2"></i>Order Products</h2>
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Product Name</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Unit Price (R)</th>
+                        <th scope="col">Total Price (R)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.OrderProducts.Any())
+                    {
+                        foreach (var product in Model.OrderProducts)
+                        {
+                            <tr>
+                                <td>@product.ProductName</td> <!-- Assuming ProductName is available -->
+                                <td>@product.Quantity</td>
+                                <td>@product.SalesPrice.ToString("C")</td> <!-- Unit Price -->
+                                <td>@(product.Quantity * product.SalesPrice).ToString("C")</td> <!-- Total Price -->
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">No products found in this order.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle me-1"></i> Back to Orders List
+        </a>
+    </div>
 </div>
-
-<h2>Order Products</h2>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Product Name</th>
-            <th>Quantity</th>
-            <th>Unit Price (R)</th>
-            <th>Total Price (R)</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var product in Model.OrderProducts)
-        {
-            <tr>
-                <td>@product.ProductName</td> <!-- Assuming ProductName is available -->
-                <td>@product.Quantity</td>
-                <td>@product.SalesPrice.ToString("C")</td> <!-- Unit Price -->
-                <td>@(product.Quantity * product.SalesPrice).ToString("C")</td> <!-- Total Price -->
-            </tr>
-        }
-    </tbody>
-</table>
-
-<a asp-action="Index" class="btn btn-secondary">Back to Orders List</a>

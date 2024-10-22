@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
-using SalesOrders.Models;
 using Microsoft.AspNetCore.Authorization;
+using SalesOrders.Models;
 using SalesOrders.Controllers;
 
 public class AccountController : Controller
@@ -39,6 +39,14 @@ public class AccountController : Controller
         }
 
         return View(model); // Return the model to show validation errors if any
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SignOut()
+    {
+        await _signInManager.SignOutAsync();
+        return RedirectToAction(nameof(HomeController.Index), "Home");
     }
 
     private IActionResult RedirectToLocal(string returnUrl)
