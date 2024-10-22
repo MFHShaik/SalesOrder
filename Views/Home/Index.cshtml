@@ -90,56 +90,43 @@
 </head>
 <body>
 
-    <!-- Accordion Example -->
-    <div class="accordion" id="accordionExample">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                    Application Instructions
-                </button>
-            </h2>
-            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <div class="instructions text-center">
-                        <h2>Welcome to the Sales Orders Application</h2>
-                        <p>Follow these steps to manage orders:</p>
-                        <ul class="text-start">
-                            <li>Navigate to the "Orders" section to view or manage existing orders.</li>
-                            <li>Create a new order by clicking the "Create Order" button under the "Orders" tab.</li>
-                            <li>Manage products and add them to your orders under the "Products" section.</li>
-                            <li>Use the "Order Products" section to add products to an existing order.</li>
-                        </ul>
-                        <p>Have fun exploring our app, and don’t forget to enjoy a random dog image below!</p>
-                    </div>
-                </div>
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <!-- Instructions on How to Use the Sales Orders Application -->
+        <div class="instructions text-center">
+            <h2>Welcome to the Sales Orders Application</h2>
+            <p>Follow these steps to manage orders:</p>
+            <ul class="text-start">
+                <li>Navigate to the "Orders" section to view or manage existing orders.</li>
+                <li>Create a new order by clicking the "Create Order" button under the "Orders" tab.</li>
+                <li>Manage products and add them to your orders under the "Products" section.</li>
+                <li>Use the "Order Products" section to add products to an existing order.</li>
+            </ul>
+            <p>Have fun exploring our app, and don’t forget to enjoy a random dog image below!</p>
+
+            <!-- Button to go to Order View Page -->
+            <div class="mt-4">
+                <a href="@Url.Action("Index", "Orders")" class="btn btn-primary btn-lg">
+                    <i class="bi bi-eye"></i> Go to Order View
+                </a>
             </div>
         </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingTwo">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    Fetch a Random Dog Image
-                </button>
-            </h2>
-            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <!-- Add a button to fetch the dog image -->
-                    <div class="text-center my-5">
-                        <button id="dogButton" class="btn btn-info btn-lg" onclick="fetchDogImage()">
-                            <i class="bi bi-hand-thumbs-up"></i> Fetch a Dog
-                        </button>
-                    </div>
 
-                    <!-- Loading Message -->
-                    <div id="loadingMessage" class="text-center loading-message" style="display: none;">
-                        Please wait 5 seconds for your dog image to load...
-                    </div>
+        <!-- Add a button to fetch the dog image -->
+        <div class="text-center my-5">
+            <button id="dogButton" class="btn btn-info btn-lg" onclick="fetchDogImage()">
+                <i class="bi bi-hand-thumbs-up"></i> Fetch a Dog
+            </button>
+        </div>
 
-                    <!-- Placeholder to display the dog image -->
-                    <div id="dogImage" class="text-center my-5">
-                        <!-- Dynamic image will be inserted here -->
-                    </div>
-                </div>
-            </div>
+        <!-- Loading Message -->
+        <div id="loadingMessage" class="text-center loading-message" style="display: none;">
+            Please wait 5 seconds for your dog image to load...
+        </div>
+
+        <!-- Placeholder to display the dog image -->
+        <div id="dogImage" class="text-center my-5">
+            <!-- Dynamic image will be inserted here -->
         </div>
     </div>
 
