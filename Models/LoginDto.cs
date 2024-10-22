@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SalesOrders.Models
 {
@@ -12,5 +11,4 @@ namespace SalesOrders.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
     }
-
 }

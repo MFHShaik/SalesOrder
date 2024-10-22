@@ -174,6 +174,23 @@ namespace SalesOrders.Controllers
             return RedirectToAction("Index");
         }
 
+        // GET: Orders/Delete
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var order = await context.Orders
+                .Include(o => o.OrdersProducts)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            return View(order); 
+        }
+
+
         // Confirm and delete order along with associated products
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -185,13 +202,27 @@ namespace SalesOrders.Controllers
 
             if (order == null)
             {
-                return NotFound();
+                return NotFound("Order not found.");
             }
 
-            context.OrdersProducts.RemoveRange(order.OrdersProducts);
-            context.Orders.Remove(order);
-            await context.SaveChangesAsync();
+            if (order.OrdersProducts != null && order.OrdersProducts.Any())
+            {
+                context.OrdersProducts.RemoveRange(order.OrdersProducts); // Remove associated products
+            }
 
+            context.Orders.Remove(order); // Remove the order itself
+
+            try
+            {
+                await context.SaveChangesAsync(); // Persist the changes
+            }
+            catch (Exception ex)
+            {
+                // Log or handle the exception
+                return StatusCode(500, "Error deleting the order. Please try again later.");
+            }
+
+            TempData["SuccessMessage"] = "Order deleted successfully!";
             return RedirectToAction(nameof(Index));
         }
 

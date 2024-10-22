@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SalesOrders.Models;
 
 namespace SalesOrders.Services
 {
-    public class ApplicationDbContext : DbContext
+    // Change the base class to IdentityDbContext<IdentityUser>
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -16,17 +19,19 @@ namespace SalesOrders.Services
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Define the composite primary key for OrderProduct
+            base.OnModelCreating(modelBuilder); // Ensure base.OnModelCreating is called for Identity
+
+            // Define the composite primary key for OrdersProduct
             modelBuilder.Entity<OrdersProduct>()
                 .HasKey(op => new { op.OrderId, op.ProductId });
 
-            // Define the relationship between Order and OrderProduct
+            // Define the relationship between Order and OrdersProduct
             modelBuilder.Entity<OrdersProduct>()
                 .HasOne(op => op.Order)
                 .WithMany(o => o.OrdersProducts)
                 .HasForeignKey(op => op.OrderId);
 
-            // Define the relationship between Product and OrderProduct
+            // Define the relationship between Product and OrdersProduct
             modelBuilder.Entity<OrdersProduct>()
                 .HasOne(op => op.Product)
                 .WithMany(p => p.OrderProducts)
@@ -35,9 +40,7 @@ namespace SalesOrders.Services
             // Specify precision and scale for decimal properties
             modelBuilder.Entity<Order>()
                 .Property(o => o.TotalAmount)
-                .HasColumnType("decimal(18,2)"); // Set precision and scale as needed
-
-            base.OnModelCreating(modelBuilder);
+                .HasColumnType("decimal(18,2)"); // Set precision and scale for TotalAmount
         }
     }
 }
